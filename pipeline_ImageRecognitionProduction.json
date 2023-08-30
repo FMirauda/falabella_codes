@@ -1,0 +1,762 @@
+{
+  "pipelineSpec": {
+    "components": {
+      "comp-blob-name-list": {
+        "executorLabel": "exec-blob-name-list",
+        "inputDefinitions": {
+          "parameters": {
+            "bucket_name": {
+              "type": "STRING"
+            }
+          }
+        },
+        "outputDefinitions": {
+          "artifacts": {
+            "output_path": {
+              "artifactType": {
+                "schemaTitle": "system.Artifact",
+                "schemaVersion": "0.0.1"
+              }
+            }
+          }
+        }
+      },
+      "comp-condition-leer-imagenes-1": {
+        "dag": {
+          "tasks": {
+            "blob-name-list": {
+              "cachingOptions": {
+                "enableCache": true
+              },
+              "componentRef": {
+                "name": "comp-blob-name-list"
+              },
+              "inputs": {
+                "parameters": {
+                  "bucket_name": {
+                    "componentInputParameter": "pipelineparam--bucket_name"
+                  }
+                }
+              },
+              "taskInfo": {
+                "name": "blob-name-list"
+              }
+            },
+            "prediction": {
+              "cachingOptions": {
+                "enableCache": true
+              },
+              "componentRef": {
+                "name": "comp-prediction"
+              },
+              "dependentTasks": [
+                "blob-name-list"
+              ],
+              "inputs": {
+                "artifacts": {
+                  "input_path": {
+                    "taskOutputArtifact": {
+                      "outputArtifactKey": "output_path",
+                      "producerTask": "blob-name-list"
+                    }
+                  }
+                },
+                "parameters": {
+                  "project_id": {
+                    "componentInputParameter": "pipelineparam--project_id"
+                  }
+                }
+              },
+              "taskInfo": {
+                "name": "prediction"
+              }
+            },
+            "save-tables": {
+              "cachingOptions": {
+                "enableCache": true
+              },
+              "componentRef": {
+                "name": "comp-save-tables"
+              },
+              "dependentTasks": [
+                "table-generation"
+              ],
+              "inputs": {
+                "artifacts": {
+                  "new_df_base_final": {
+                    "taskOutputArtifact": {
+                      "outputArtifactKey": "dataset",
+                      "producerTask": "table-generation"
+                    }
+                  }
+                },
+                "parameters": {
+                  "dataset": {
+                    "componentInputParameter": "pipelineparam--dataset"
+                  },
+                  "full_table": {
+                    "componentInputParameter": "pipelineparam--full_table"
+                  },
+                  "n_r": {
+                    "componentInputParameter": "pipelineparam--n_r"
+                  },
+                  "prediction_if_exists": {
+                    "componentInputParameter": "pipelineparam--prediction_if_exists"
+                  },
+                  "project_id": {
+                    "componentInputParameter": "pipelineparam--project_id"
+                  },
+                  "random_backup_if_exists": {
+                    "componentInputParameter": "pipelineparam--random_backup_if_exists"
+                  },
+                  "random_if_exists": {
+                    "componentInputParameter": "pipelineparam--random_if_exists"
+                  },
+                  "random_table": {
+                    "componentInputParameter": "pipelineparam--random_table"
+                  },
+                  "random_table_backup": {
+                    "componentInputParameter": "pipelineparam--random_table_backup"
+                  }
+                }
+              },
+              "taskInfo": {
+                "name": "save-tables"
+              }
+            },
+            "table-generation": {
+              "cachingOptions": {
+                "enableCache": true
+              },
+              "componentRef": {
+                "name": "comp-table-generation"
+              },
+              "dependentTasks": [
+                "prediction"
+              ],
+              "inputs": {
+                "artifacts": {
+                  "df_base": {
+                    "taskOutputArtifact": {
+                      "outputArtifactKey": "dataset",
+                      "producerTask": "prediction"
+                    }
+                  },
+                  "df_images": {
+                    "componentInputArtifact": "pipelineparam--load-data-dataset"
+                  }
+                },
+                "parameters": {
+                  "delta_time1": {
+                    "taskOutputParameter": {
+                      "outputParameterKey": "time",
+                      "producerTask": "prediction"
+                    }
+                  }
+                }
+              },
+              "taskInfo": {
+                "name": "table-generation"
+              }
+            }
+          }
+        },
+        "inputDefinitions": {
+          "artifacts": {
+            "pipelineparam--load-data-dataset": {
+              "artifactType": {
+                "schemaTitle": "system.Dataset",
+                "schemaVersion": "0.0.1"
+              }
+            }
+          },
+          "parameters": {
+            "pipelineparam--bucket_name": {
+              "type": "STRING"
+            },
+            "pipelineparam--dataset": {
+              "type": "STRING"
+            },
+            "pipelineparam--full_table": {
+              "type": "STRING"
+            },
+            "pipelineparam--n_r": {
+              "type": "INT"
+            },
+            "pipelineparam--prediction_if_exists": {
+              "type": "STRING"
+            },
+            "pipelineparam--project_id": {
+              "type": "STRING"
+            },
+            "pipelineparam--random_backup_if_exists": {
+              "type": "STRING"
+            },
+            "pipelineparam--random_if_exists": {
+              "type": "STRING"
+            },
+            "pipelineparam--random_table": {
+              "type": "STRING"
+            },
+            "pipelineparam--random_table_backup": {
+              "type": "STRING"
+            },
+            "pipelineparam--set-data-parallel-deploy": {
+              "type": "STRING"
+            }
+          }
+        }
+      },
+      "comp-copy-tables": {
+        "executorLabel": "exec-copy-tables",
+        "inputDefinitions": {
+          "parameters": {
+            "project_id": {
+              "type": "STRING"
+            }
+          }
+        }
+      },
+      "comp-load-data": {
+        "executorLabel": "exec-load-data",
+        "inputDefinitions": {
+          "parameters": {
+            "project_id": {
+              "type": "STRING"
+            },
+            "query": {
+              "type": "STRING"
+            }
+          }
+        },
+        "outputDefinitions": {
+          "artifacts": {
+            "dataset": {
+              "artifactType": {
+                "schemaTitle": "system.Dataset",
+                "schemaVersion": "0.0.1"
+              }
+            }
+          }
+        }
+      },
+      "comp-prediction": {
+        "executorLabel": "exec-prediction",
+        "inputDefinitions": {
+          "artifacts": {
+            "input_path": {
+              "artifactType": {
+                "schemaTitle": "system.Artifact",
+                "schemaVersion": "0.0.1"
+              }
+            }
+          },
+          "parameters": {
+            "project_id": {
+              "type": "STRING"
+            }
+          }
+        },
+        "outputDefinitions": {
+          "artifacts": {
+            "dataset": {
+              "artifactType": {
+                "schemaTitle": "system.Dataset",
+                "schemaVersion": "0.0.1"
+              }
+            }
+          },
+          "parameters": {
+            "time": {
+              "type": "DOUBLE"
+            }
+          }
+        }
+      },
+      "comp-save-tables": {
+        "executorLabel": "exec-save-tables",
+        "inputDefinitions": {
+          "artifacts": {
+            "new_df_base_final": {
+              "artifactType": {
+                "schemaTitle": "system.Dataset",
+                "schemaVersion": "0.0.1"
+              }
+            }
+          },
+          "parameters": {
+            "dataset": {
+              "type": "STRING"
+            },
+            "full_table": {
+              "type": "STRING"
+            },
+            "n_r": {
+              "type": "INT"
+            },
+            "prediction_if_exists": {
+              "type": "STRING"
+            },
+            "project_id": {
+              "type": "STRING"
+            },
+            "random_backup_if_exists": {
+              "type": "STRING"
+            },
+            "random_if_exists": {
+              "type": "STRING"
+            },
+            "random_table": {
+              "type": "STRING"
+            },
+            "random_table_backup": {
+              "type": "STRING"
+            }
+          }
+        },
+        "outputDefinitions": {
+          "artifacts": {
+            "output_dataset": {
+              "artifactType": {
+                "schemaTitle": "system.Dataset",
+                "schemaVersion": "0.0.1"
+              }
+            }
+          }
+        }
+      },
+      "comp-set-data-parallel": {
+        "executorLabel": "exec-set-data-parallel",
+        "inputDefinitions": {
+          "artifacts": {
+            "df_images": {
+              "artifactType": {
+                "schemaTitle": "system.Dataset",
+                "schemaVersion": "0.0.1"
+              }
+            }
+          },
+          "parameters": {
+            "project_id": {
+              "type": "STRING"
+            }
+          }
+        },
+        "outputDefinitions": {
+          "parameters": {
+            "deploy": {
+              "type": "STRING"
+            }
+          }
+        }
+      },
+      "comp-table-generation": {
+        "executorLabel": "exec-table-generation",
+        "inputDefinitions": {
+          "artifacts": {
+            "df_base": {
+              "artifactType": {
+                "schemaTitle": "system.Dataset",
+                "schemaVersion": "0.0.1"
+              }
+            },
+            "df_images": {
+              "artifactType": {
+                "schemaTitle": "system.Dataset",
+                "schemaVersion": "0.0.1"
+              }
+            }
+          },
+          "parameters": {
+            "delta_time1": {
+              "type": "DOUBLE"
+            }
+          }
+        },
+        "outputDefinitions": {
+          "artifacts": {
+            "dataset": {
+              "artifactType": {
+                "schemaTitle": "system.Dataset",
+                "schemaVersion": "0.0.1"
+              }
+            }
+          }
+        }
+      }
+    },
+    "deploymentSpec": {
+      "executors": {
+        "exec-blob-name-list": {
+          "container": {
+            "args": [
+              "--executor_input",
+              "{{$}}",
+              "--function_to_execute",
+              "blob_name_list"
+            ],
+            "command": [
+              "sh",
+              "-c",
+              "\nif ! [ -x \"$(command -v pip)\" ]; then\n    python3 -m ensurepip || python3 -m ensurepip --user || apt-get install python3-pip\nfi\n\nPIP_DISABLE_PIP_VERSION_CHECK=1 python3 -m pip install --quiet     --no-warn-script-location 'google-cloud-storage' 'db-dtypes' 'kfp==1.8.16' && \"$0\" \"$@\"\n",
+              "sh",
+              "-ec",
+              "program_path=$(mktemp -d)\nprintf \"%s\" \"$0\" > \"$program_path/ephemeral_component.py\"\npython3 -m kfp.v2.components.executor_main                         --component_module_path                         \"$program_path/ephemeral_component.py\"                         \"$@\"\n",
+              "\nimport kfp\nfrom kfp.v2 import dsl\nfrom kfp.v2.dsl import *\nfrom typing import *\n\ndef blob_name_list(\n    bucket_name:str,\n    output_path: OutputPath(),\n):\n    from google.cloud import storage\n    #from tempfile import TemporaryFile\n    import datetime\n\n    date=datetime.datetime.now()\n\n    #nombre carpeta\n    #if date == \"today\":\n    #    folder = str(date.year) + str(date.month) + str(date.day)\n    #elif date == \"another day\":\n    #    folder = str(year) + str(month) + str(day)\n    #folder = str(2022) + str(12) + str(3) \n    folder = f'{date.year}{date.month}{date.day}'\n\n    # inicializaci\u00f3n\n    client = storage.Client()\n    bucket = client.get_bucket(bucket_name)\n    blobs = bucket.list_blobs(prefix=folder)\n    # generar lista de nombres de blobs\n    name_blobs_list = list(blobs)\n    blobs_list = list(map(lambda x: x.name, name_blobs_list))\n\n    import pickle\n\n    with open(output_path + \"blobs_list.pkl\", 'wb') as file:\n        pickle.dump(blobs_list, file)\n\n    # Metadata\n    #FECHA = datetime.datetime.now().strftime(\"%Y-%m-%d\")\n    #output_path.metadata[\"len_list\"] = len(blobs_list)\n    print(len(blobs_list))\n\n"
+            ],
+            "image": "python:3.9"
+          }
+        },
+        "exec-copy-tables": {
+          "container": {
+            "args": [
+              "--executor_input",
+              "{{$}}",
+              "--function_to_execute",
+              "copy_tables"
+            ],
+            "command": [
+              "sh",
+              "-c",
+              "\nif ! [ -x \"$(command -v pip)\" ]; then\n    python3 -m ensurepip || python3 -m ensurepip --user || apt-get install python3-pip\nfi\n\nPIP_DISABLE_PIP_VERSION_CHECK=1 python3 -m pip install --quiet     --no-warn-script-location 'google-cloud-bigquery' 'db-dtypes' 'kfp==1.8.16' && \"$0\" \"$@\"\n",
+              "sh",
+              "-ec",
+              "program_path=$(mktemp -d)\nprintf \"%s\" \"$0\" > \"$program_path/ephemeral_component.py\"\npython3 -m kfp.v2.components.executor_main                         --component_module_path                         \"$program_path/ephemeral_component.py\"                         \"$@\"\n",
+              "\nimport kfp\nfrom kfp.v2 import dsl\nfrom kfp.v2.dsl import *\nfrom typing import *\n\ndef copy_tables(\n    project_id:str,\n):  \n    from google.cloud import bigquery\n\n    # Construct a BigQuery client object.\n    client = bigquery.Client(project = project_id)\n\n    # TODO(developer): Set source_table_id to the ID of the original table.\n    source_table_id1 = \"tc-sc-bi-analytics-corp-supply.pod_image_recognition.prediction_table\"\n    source_table_id2 = \"tc-sc-bi-analytics-corp-supply.pod_image_recognition.validation_table_backup\"\n\n    # TODO(developer): Set destination_table_id to the ID of the destination table.\n    destination_table_id1 = \"tc-sc-bi-analytics-corp-supply.pod_image_recognition.prediction_table_copy\"\n    destination_table_id2 = \"tc-sc-bi-analytics-corp-supply.pod_image_recognition.validation_table_backup_copy\"\n\n    # Eliminar tablas copiadas\n    client.delete_table(destination_table_id1, not_found_ok=True)\n    client.delete_table(destination_table_id2, not_found_ok=True)\n\n    # Copiar tablas originales\n    job = client.copy_table(source_table_id1, destination_table_id1)\n    job.result()  # Wait for the job to complete.\n    print(\"A copy of the table created.\")\n    job = client.copy_table(source_table_id2, destination_table_id2)\n    job.result()  # Wait for the job to complete.\n    print(\"A copy of the table created.\")\n\n"
+            ],
+            "image": "python:3.9"
+          }
+        },
+        "exec-load-data": {
+          "container": {
+            "args": [
+              "--executor_input",
+              "{{$}}",
+              "--function_to_execute",
+              "load_data"
+            ],
+            "command": [
+              "sh",
+              "-c",
+              "\nif ! [ -x \"$(command -v pip)\" ]; then\n    python3 -m ensurepip || python3 -m ensurepip --user || apt-get install python3-pip\nfi\n\nPIP_DISABLE_PIP_VERSION_CHECK=1 python3 -m pip install --quiet     --no-warn-script-location 'pandas' 'google-cloud-bigquery' 'db-dtypes' 'kfp==1.8.16' && \"$0\" \"$@\"\n",
+              "sh",
+              "-ec",
+              "program_path=$(mktemp -d)\nprintf \"%s\" \"$0\" > \"$program_path/ephemeral_component.py\"\npython3 -m kfp.v2.components.executor_main                         --component_module_path                         \"$program_path/ephemeral_component.py\"                         \"$@\"\n",
+              "\nimport kfp\nfrom kfp.v2 import dsl\nfrom kfp.v2.dsl import *\nfrom typing import *\n\ndef load_data(\n    query:str,\n    project_id:str,\n    dataset:Output[Dataset],  \n):\n    import pandas as pd\n    import datetime\n    from google.cloud import bigquery\n\n    client = bigquery.Client(project = project_id)\n    df_base = client.query(query).to_dataframe().drop_duplicates(['url'])\n\n    # Metadata\n    FECHA = datetime.datetime.now().strftime(\"%Y-%m-%d\")\n    dataset.metadata[\"updated_date\"] = FECHA\n    dataset.metadata[\"len_data\"] = len(df_base)\n\n    # Save Artifact\n    df_base.to_csv(dataset.path + \".csv\", index = False, encoding = 'utf-8-sig')\n\n"
+            ],
+            "image": "python:3.9"
+          }
+        },
+        "exec-prediction": {
+          "container": {
+            "args": [
+              "--executor_input",
+              "{{$}}",
+              "--function_to_execute",
+              "prediction"
+            ],
+            "command": [
+              "sh",
+              "-c",
+              "\nif ! [ -x \"$(command -v pip)\" ]; then\n    python3 -m ensurepip || python3 -m ensurepip --user || apt-get install python3-pip\nfi\n\nPIP_DISABLE_PIP_VERSION_CHECK=1 python3 -m pip install --quiet     --no-warn-script-location 'pandas' 'numpy' 'google-cloud-bigquery' 'google-cloud-storage' 'db-dtypes' 'scikit-image' 'psutil' 'opencv-python-headless' 'kfp==1.8.16' && \"$0\" \"$@\"\n",
+              "sh",
+              "-ec",
+              "program_path=$(mktemp -d)\nprintf \"%s\" \"$0\" > \"$program_path/ephemeral_component.py\"\npython3 -m kfp.v2.components.executor_main                         --component_module_path                         \"$program_path/ephemeral_component.py\"                         \"$@\"\n",
+              "\nimport kfp\nfrom kfp.v2 import dsl\nfrom kfp.v2.dsl import *\nfrom typing import *\n\ndef prediction(\n    project_id:str,\n    input_path:InputPath(),\n    dataset:Output[Dataset] \n)-> NamedTuple(\"output\", [(\"time\", float)]):\n    import psutil\n\n    import pickle\n\n    file = open(input_path + \"blobs_list.pkl\", 'rb')\n    blobs_list = pickle.load(file)\n\n    from google.cloud import storage\n\n    import torch\n    import torchvision\n    #from torchvision.models import resnext101_32x8d\n    from torchvision.models import resnext101_32x8d, ResNeXt101_32X8D_Weights\n    from torchvision.models.detection.faster_rcnn import FastRCNNPredictor\n    from torch.utils.data import DataLoader\n\n    #########################################################\n    # Getting % usage of virtual_memory ( 3rd field)\n    print('RAM memory % used:', psutil.virtual_memory()[2])\n    # Getting usage of virtual_memory in GB ( 4th field)\n    print('RAM Used (GB):', psutil.virtual_memory()[3]/(1024.0 ** 3))\n    #########################################################\n\n    # Definir resnext\n    #resnext1 = resnext101_32x8d(pretrained=True)\n    #resnext2 = resnext101_32x8d(pretrained=True)\n    weights = ResNeXt101_32X8D_Weights.DEFAULT\n    resnext1 = resnext101_32x8d(weights)\n    resnext2 = resnext101_32x8d(weights)\n\n    # Obtener clases para modelos\n    def download_blob(bucket_name, source_blob_name, destination_file_name, project_id):\n        \"\"\"Downloads a blob from the bucket.\"\"\"\n        storage_client = storage.Client(project= project_id)\n        bucket = storage_client.bucket(bucket_name)\n        blob = bucket.blob(source_blob_name)\n        blob.download_to_filename(destination_file_name)\n        print(\n            \"Downloaded storage object {} from bucket {} to local file {}.\".format(\n                source_blob_name, bucket_name, destination_file_name\n            )\n        )\n    bucket = \"pod_images_library\" \n    # EDIT: cambiar libreria\n    #download_blob(bucket, \"models_import2.py\", \"models_import2.py\", project_id)\n    download_blob(bucket, \"models_import3.py\", \"models_import3.py\", project_id)\n\n    # EDIT: cambiar libreria\n    #from models_import2 import MultilabelClassifier1, MultilabelClassifier2\n    from models_import3 import MultilabelClassifier1, MultilabelClassifier2\n\n    # cargar modelo para cara y n\u00b0 domicilio\n    download_blob(bucket, \"Models/mlc_model_4.pth\", \"mlc_model_4.pth\", project_id)\n    device = 'cuda'\n    PATH_1 = 'mlc_model_4.pth'\n    ml_model_1 = MultilabelClassifier1(3, resnext1).to(device)\n    ml_model_dict_1 = torch.load(PATH_1, map_location=torch.device(device))\n    ml_model_1.load_state_dict(ml_model_dict_1['model_state_dict'])\n\n    # cargar modelo para etiqueta del producto\n    download_blob(bucket, \n                  \"Models/mlc_model_baseline_data_revisada_1_2.pth\", \n                  \"mlc_model_baseline_data_revisada_1_2.pth\", project_id)\n    device = 'cuda'\n    PATH_2 = 'mlc_model_baseline_data_revisada_1_2.pth'\n    ml_model_2 = MultilabelClassifier2(3, resnext2).to(device)\n    ml_model_dict_2 = torch.load(PATH_2, map_location=torch.device(device))\n    ml_model_2.load_state_dict(ml_model_dict_2['model_state_dict'])\n\n    def get_object_detection_model(num_classes):\n        # load a model pre-trained on COCO\n        model = torchvision.models.detection.fasterrcnn_resnet50_fpn(pretrained=True)\n        # get number of input features for the classifier\n        in_features = model.roi_heads.box_predictor.cls_score.in_features\n        # replace the pre-trained head with a new one\n        model.roi_heads.box_predictor = FastRCNNPredictor(in_features, num_classes) \n        return model\n\n    # cargar modelo detector de objetos\n    download_blob(bucket, \n                  \"Models/model_cf_12y3_1.pth\", \n                  \"model_cf_12y3_1.pth\", project_id)\n    device = 'cuda'\n    model_path = 'model_cf_12y3_1.pth'\n    num_classes = 2\n    od_model = get_object_detection_model(num_classes)\n    od_model_dict = torch.load(model_path, map_location=torch.device(device))\n    od_model.load_state_dict(od_model_dict['model_state_dict'])\n\n    #########################################################\n    # Getting % usage of virtual_memory ( 3rd field)\n    print('RAM memory % used:', psutil.virtual_memory()[2])\n    # Getting usage of virtual_memory in GB ( 4th field)\n    print('RAM Used (GB):', psutil.virtual_memory()[3]/(1024.0 ** 3))\n    #########################################################\n\n    # EDIT: cambiar libreria\n    #from models_import2 import PredictionDataset\n    from models_import3 import PredictionDataset\n\n    # se generan batch para clasificador multi-etiqueta y detector de objetos\n    prediction_set_mlc = PredictionDataset(bucket_name = 'pod_photos', blob_name_list = blobs_list,\n                                           normalization = 'mlc', device = 'cuda')\n    prediction_set_od = PredictionDataset(bucket_name = 'pod_photos', blob_name_list = blobs_list,\n                                          normalization = 'od', device = 'cuda')\n\n    # para aumentar m\u00e1s el batch_size hay que agregar m\u00e1s memoria\n    predictionLoader_mlc = DataLoader(prediction_set_mlc, batch_size=32, num_workers=2,\n                                      shuffle = False, pin_memory = True)\n    predictionLoader_od = DataLoader(prediction_set_od, batch_size=32, num_workers=2,\n                                     shuffle = False, pin_memory = True)\n\n    import itertools\n\n    def bbox_function(b, area_img):\n        l =list(range(b.shape[0]))\n        # recorrer cajas y calcular inter-area para cada combinaci\u00f3n\n        indice = 0\n        interArea = 0\n        for i in itertools.combinations(l, r=2):\n            # obtener coordenadas de la inter-area\n            x0 = max(b[i[0]][0], b[i[1]][0])\n            y0 = max(b[i[0]][1], b[i[1]][1])\n            x1 = min(b[i[0]][2], b[i[1]][2])\n            y1 = min(b[i[0]][3], b[i[1]][3])\n\n            # calcular inter-area\n            dif_x = x0-x1\n            dif_y = y0-y1\n            # se verifica que las esquinas de la interArea esten bien ubicadas \n            if dif_x < 0 and dif_y < 0:\n                interArea += dif_x*dif_y\n                ##interArea += abs(x0-x1)*abs(y0-y1)\n\n        # sumar areas de cada bbox\n        area_total_bbox = 0\n        for box in b:\n            # calcular area de cada bbox\n            area_bbox = abs(box[0]-box[2])*abs(box[1]-box[3])\n            # calcular area total de bbox\n            area_total_bbox += area_bbox\n\n        # calcular la union de las areas de cada bbox\n        union = area_total_bbox - interArea\n\n        # calcular contexto\n        if torch.is_tensor(union):\n            contexto = union.item()/area_img\n\n        else:\n            contexto = union/area_img\n\n        return contexto\n\n    import pandas as pd\n    import numpy as np\n\n    def score(predictionLoader_mlc, predictionLoader_od, classificator_1, classificator_2, \n              detector = od_model, pesos = {'w_prod': 0.4, 'w_notface': 0.1,'w_label': 0.3, 'w_num': 0.1, \n                                            'w_contx': 0.2},\n              thresholds = {'t_prod': 0.5, 't_face': 0.5, 't_label': 0.5, 't_num': 0.5, 't_ctx_down': 0.2, \n                            't_ctx_up': 0.65}, device = 'cuda'):\n        \"\"\"\n        Args:\n            classificator_1 (modelo): clasificador multi-etiqueta para detectar la etiqueta del paquete\n            classificator_2 (modelo): clasificador multi-etiqueta para detectar la cara y el domicilio\n            detector (modelo): detector de objetos para identificar el paquete y su bbox respectivo\n            pesos (dict): diccionario con valores para cada peso, es decir,\n            w_prod (product), w_notface (without face), w_label (product label), \n            w_num (address number) y w_contx (context)\n            thresholds = diccionario con valores de umbral para cada criterio, es decir,\n            t_prod (product), t_face (face detector), t_label (product label) y \n            t_num (address number)\n\n        Obs: los pesos deben sumar 1 para todos los criterios menos el del numero de domicilio. Este\n            ultimo corresponde a un beneficio de +0.1 si es que aparece en la fotograf\u00eda.\n\n        Returns:\n            result_data (dataFrame): cada una de las columnas del dataFrame corresponde a la predicci\u00f3n\n            de cada criterio sobre cierto umbral, los scores (confianza del modelo) de cada criterio y \n            la nota de la foto (score).\n        \"\"\"\n        # evaluar con gpu o cpu \n        device = torch.device(device)\n\n        classificator_1.to(device)\n        classificator_1.eval()  \n        classificator_2.to(device)\n        classificator_2.eval()           \n        detector.to(device)\n        detector.eval()\n        df_base = pd.DataFrame(columns = ['url','paquete', 's_paquete', 'etiqueta_producto',\n                                              's_etiqueta_producto', 'sin_rostro', 's_sin_rostro',\n                                              'numero_domicilio', 's_numero_domicilio', 'contexto',\n                                              'ctx_value', 'score'])\n        with torch.no_grad():\n            for i, image in enumerate(zip(predictionLoader_mlc, predictionLoader_od)):\n                # se obtiene la imagen de cada dataLoader\n                image_mlc = image[0][0]\n                image_od = image[1][0]\n\n                # obtener areas y urls de las imagenes\n                area_img = image[0][1]\n                ########################\n                # EDIT: agregar columna con tama\u00f1o de im\u00e1genes, si es que hay error\n                # y/o si es que esta en negro\n                # area_img = 1 indica que geosort mando im\u00e1gen de 1 pixel \n                # err_read = 1 indica que hubo un error de lectura desde el bucket \n                error_img_size = torch.where(area_img == 1, 1, 0)\n                err_read = image[0][4].reshape(-1,1).to('cpu').numpy()\n                # ratio \n                ratio = image[0][3]\n                # ratio cercano a 1 indica im\u00e1gen en negro\n                black_img = torch.where(ratio >= 0.98, 1, 0) \n                # columnas\n                area_img_col = image[0][1].reshape(-1,1).to('cpu').numpy()\n                error_img_size = error_img_size.reshape(-1,1).to('cpu').numpy()\n                black_img = black_img.reshape(-1,1).to('cpu').numpy()\n                ######################\n\n                #img_url = np.asarray(image[0][2]).reshape(-1,1)\n                img_url = list(image[0][2])\n\n                # CLASIFICACION MULTI-ETIQUETA\n                #---------------------------clasificador 1--------------------------------\n                label_base = classificator_1(image_mlc.to(device))\n                #---------------------------clasificador 2--------------------------------\n                label_etiqueta = classificator_2(image_mlc.to(device))\n                # obtener score\n                score_etiqueta = torch.sigmoid(label_etiqueta['label']).squeeze()\n                score = torch.sigmoid(label_base['label']).squeeze()\n                # condici\u00f3n para cuando se tiene un batch de 1 elemento\n                if score_etiqueta.dim() == 1:\n                    score_etiqueta = torch.unsqueeze(score_etiqueta, dim=0)\n                    score = torch.unsqueeze(score, dim=0)\n                # obtener predicci\u00f3n etiqueta\n                s_etiqueta = score_etiqueta[:,0]\n                etiqueta = torch.where(s_etiqueta >= thresholds['t_label'], 1, 0)\n                # obtener predicci\u00f3n domicilio\n                s_domicilio = score[:,1]\n                domicilio = torch.where(s_domicilio >= thresholds['t_num'], 1, 0)\n                # obtener predicci\u00f3n cara\n                s_cara = score[:,2]\n                s_no_cara = 1-s_cara\n                no_cara = torch.where(s_no_cara >= thresholds['t_face'], 1, 0)\n\n                etiqueta = etiqueta.reshape(-1,1).to('cpu').numpy()\n                s_etiqueta = s_etiqueta.reshape(-1,1).to('cpu').numpy()\n                domicilio = domicilio.reshape(-1,1).to('cpu').numpy()\n                s_domicilio = s_domicilio.reshape(-1,1).to('cpu').numpy()\n                no_cara = no_cara.reshape(-1,1).to('cpu').numpy()\n                s_no_cara = s_no_cara.reshape(-1,1).to('cpu').numpy()\n\n                #-----------------------------------------------------------------------------\n                # DETECTOR DE OBJETOS\n                od_prediction = od_model(image_od.to(device))\n                dataFrame = pd.DataFrame(od_prediction).to_dict(orient=\"list\")\n                list_of_lists = list(map(lambda x: x.tolist(), dataFrame['boxes']))\n                array_of_arrays1= np.array(list(map(lambda x: x.to('cpu').numpy(), dataFrame['boxes'])))\n                array_of_arrays2= np.array(list(map(lambda x: x.to('cpu').numpy(), dataFrame['scores'])))\n                #bla = list(map(lambda x: torch.where(x >= 0.5, 1, 0), dataFrame['scores']))\n                bla2 = np.array(list(map(lambda x: np.where(x.to('cpu').numpy()>=thresholds['t_prod'],1,\n                                                            0).reshape(-1,1),\n                                         dataFrame['scores'])))\n                producto = array_of_arrays1*bla2\n                producto_wz = np.array(list(map(lambda x: x[~np.all(x == 0, axis=1)], producto)))\n                contexto = np.array(list(map(lambda x,y: bbox_function(x,y), producto_wz, area_img)))\n                contexto = contexto.reshape(-1,1)\n                ctx_value = np.where(((contexto >= thresholds['t_ctx_down']) & (contexto <= thresholds['t_ctx_up'])),\n                                     1, 0) \n                s_paquete = torch.tensor(list(map(lambda x: max(x, default=0), dataFrame['scores'])))\n                s_paquete = s_paquete.reshape(-1,1)\n                paquete = torch.where(s_paquete >= thresholds['t_prod'], 1, 0)\n                # Obtener array de resultados\n                #result = np.concatenate([paquete, s_paquete, etiqueta, s_etiqueta, no_cara, s_no_cara,\n                #                        domicilio, s_domicilio, contexto, ctx_value], axis = 1)\n                # EDIT: nuevas columnas\n                result = np.concatenate([paquete, s_paquete, etiqueta, s_etiqueta, no_cara, s_no_cara,\n                                        domicilio, s_domicilio, contexto, ctx_value, area_img_col,\n                                         error_img_size, err_read, black_img], axis = 1)\n\n                # LLevarlo a un dataFrame\n                #df = pd.DataFrame(result, columns=['paquete','s_paquete','etiqueta_producto', \\\n                #                                               's_etiqueta_producto', 'sin_rostro', 's_sin_rostro',\\\n                #                                               'numero_domicilio', 's_numero_domicilio', 'contexto',\\\n                #                                               'ctx_value'])\n                # EDIT: nuevo dataframe\n                df = pd.DataFrame(result, columns=['paquete','s_paquete','etiqueta_producto', \\\n                                                               's_etiqueta_producto', 'sin_rostro', 's_sin_rostro',\\\n                                                               'numero_domicilio', 's_numero_domicilio', 'contexto',\\\n                                                               'ctx_value', 'size', 'error_size', \\\n                                                   'error_lectura', 'negra'])\n\n                pesos = {'w_prod': 0.4, 'w_notface': 0.1,'w_label': 0.3, 'w_num': 0.1, 'w_contx': 0.2}\n                df['score'] = df.paquete*pesos['w_prod'] + df.etiqueta_producto*pesos['w_label'] + \\\n                df.sin_rostro*pesos['w_notface'] + df.numero_domicilio*pesos['w_num'] + df.ctx_value*pesos['w_contx']\n                df.insert(loc=0, column='url', value=img_url)\n                # concatenar a df anterior\n                df_base = pd.concat((df_base,df), ignore_index= True)\n        return df_base\n\n    # importar tiempo\n    import time\n    t_ini = time.time()\n\n    df_prediction = score(predictionLoader_mlc, predictionLoader_od, ml_model_1 , ml_model_2, \n                          detector = od_model,pesos = {'w_prod': 0.4, 'w_notface': 0.1,\n                                                       'w_label': 0.3, 'w_num': 0.1, 'w_contx': 0.2},\n                          thresholds = {'t_prod': 0.5, 't_face': 0.6491, 't_label': 0.3, 't_num': 0.6, \n                                        't_ctx_down': 0.2, 't_ctx_up': 0.65}, device = 'cuda')\n\n    # calcular cu\u00e1nto se demora en procesar\n    t_fin = time.time()\n    delta_time = t_fin-t_ini\n\n    #########################################################\n    print(delta_time)\n    # Getting % usage of virtual_memory ( 3rd field)\n    print('RAM memory % used:', psutil.virtual_memory()[2])\n    # Getting usage of virtual_memory in GB ( 4th field)\n    print('RAM Used (GB):', psutil.virtual_memory()[3]/(1024.0 ** 3))\n    #########################################################\n\n    # Metadata\n    import datetime\n    FECHA = datetime.datetime.now().strftime(\"%Y-%m-%d\")\n    dataset.metadata[\"updated_date\"] = FECHA\n    dataset.metadata[\"len_data\"] = len(df_prediction)\n\n    # Save Artifact\n    df_prediction.to_csv(dataset.path + \".csv\", index = False, encoding = 'utf-8-sig')\n\n    return(delta_time,)\n\n"
+            ],
+            "image": "gcr.io/deeplearning-platform-release/pytorch-gpu",
+            "resources": {
+              "accelerator": {
+                "count": "1",
+                "type": "NVIDIA_TESLA_T4"
+              },
+              "cpuLimit": 4.0,
+              "memoryLimit": 15.0
+            }
+          }
+        },
+        "exec-save-tables": {
+          "container": {
+            "args": [
+              "--executor_input",
+              "{{$}}",
+              "--function_to_execute",
+              "save_tables"
+            ],
+            "command": [
+              "sh",
+              "-c",
+              "\nif ! [ -x \"$(command -v pip)\" ]; then\n    python3 -m ensurepip || python3 -m ensurepip --user || apt-get install python3-pip\nfi\n\nPIP_DISABLE_PIP_VERSION_CHECK=1 python3 -m pip install --quiet     --no-warn-script-location 'pandas' 'pandas-gbq' 'google-cloud-bigquery' 'db-dtypes' 'kfp==1.8.16' && \"$0\" \"$@\"\n",
+              "sh",
+              "-ec",
+              "program_path=$(mktemp -d)\nprintf \"%s\" \"$0\" > \"$program_path/ephemeral_component.py\"\npython3 -m kfp.v2.components.executor_main                         --component_module_path                         \"$program_path/ephemeral_component.py\"                         \"$@\"\n",
+              "\nimport kfp\nfrom kfp.v2 import dsl\nfrom kfp.v2.dsl import *\nfrom typing import *\n\ndef save_tables(\n    new_df_base_final:Input[Dataset],\n    n_r:int,\n    project_id:str,\n    dataset:str,\n    full_table:str, \n    random_table:str, \n    random_table_backup:str,  \n    prediction_if_exists:str,\n    random_if_exists:str, \n    random_backup_if_exists:str,\n    output_dataset: Output[Dataset],  \n):\n    import pandas as pd\n    import datetime\n\n    new_df_base_final = pd.read_csv(new_df_base_final.path + \".csv\")\n\n    # cambiar formato de columnas\n    # int to string\n    new_df_base_final['SOC'] = new_df_base_final['SOC'].astype(str)\n    new_df_base_final['provider_id'] = new_df_base_final['provider_id'].astype(str)\n    # string to timestamp\n    new_df_base_final['dfl_crte_tmst'] = pd.to_datetime(new_df_base_final['dfl_crte_tmst'], utc=True).dt.tz_localize(None)\n    new_df_base_final['event_crte_tmst'] = pd.to_datetime(new_df_base_final['event_crte_tmst'], utc=True).dt.tz_localize(None)\n\n    # generar tabla aleatoria\n    df_copy = new_df_base_final.copy()\n    #df_filtrado = df_copy[(df_copy.enlace != 'incorrecto')]\n    df_copy=df_copy.assign(paquete_em=\"\", etiqueta_em=\"\", domicilio_em=\"\", rostro_em=\"\", error=\"\")\n    import pandas_gbq\n    # ubicaci\u00f3n de destino para tabla procesada\n    destination_full_table = dataset + '.' + full_table\n    # anexar tabla de predicciones\n    pandas_gbq.to_gbq(new_df_base_final, destination_full_table, project_id=project_id, if_exists = prediction_if_exists)\n    #print(\"Se almacen\u00f3 exitosamente tabla de predicciones\")\n    # generar tabla aleatoria\n\n    # seleccionar peque\u00f1o conjunto de datos aleatorios de cada sample\n    # intentar generar tabla aleatoria\n    # EDIT: random con clases balanceadas\n    ## filtros (sacar im\u00e1genes negras y con error)\n    random = df_copy[(df_copy['error_size'] == 0) & (df_copy['error_lectura'] == 0) & (df_copy['negra'] == 0)]\n    ## filtros por clase paquete, etiqueta, sin rostro, n\u00b0 domicilio\n    random_0000 = random[(random['paquete']== 0) & (random['etiqueta_producto']== 0) & \\\n                         (random['sin_rostro'] == 0) & (random['numero_domicilio'] == 0)]\n    random_0001 = random[(random['paquete']== 0) & (random['etiqueta_producto']== 0) & \\\n                         (random['sin_rostro'] == 0) & (random['numero_domicilio'] == 1)]\n    random_0010 = random[(random['paquete']== 0) & (random['etiqueta_producto']== 0) & \\\n                         (random['sin_rostro'] == 1) & (random['numero_domicilio'] == 0)]\n    random_0011 = random[(random['paquete']== 0) & (random['etiqueta_producto']== 0) & \\\n                         (random['sin_rostro'] == 1) & (random['numero_domicilio'] == 1)]\n    random_0100 = random[(random['paquete']== 0) & (random['etiqueta_producto']== 1) & \\\n                         (random['sin_rostro'] == 0) & (random['numero_domicilio'] == 0)]\n    random_0101 = random[(random['paquete']== 0) & (random['etiqueta_producto']== 1) & \\\n                         (random['sin_rostro'] == 0) & (random['numero_domicilio'] == 1)]\n    random_0110 = random[(random['paquete']== 0) & (random['etiqueta_producto']== 1) & \\\n                         (random['sin_rostro'] == 1) & (random['numero_domicilio'] == 0)]\n    random_0111 = random[(random['paquete']== 0) & (random['etiqueta_producto']== 1) & \\\n                         (random['sin_rostro'] == 1) & (random['numero_domicilio'] == 1)]\n    random_1000 = random[(random['paquete']== 1) & (random['etiqueta_producto']== 0) & \\\n                         (random['sin_rostro'] == 0) & (random['numero_domicilio'] == 0)]\n    random_1001 = random[(random['paquete']== 1) & (random['etiqueta_producto']== 0) & \\\n                         (random['sin_rostro'] == 0) & (random['numero_domicilio'] == 1)]\n    random_1010 = random[(random['paquete']== 1) & (random['etiqueta_producto']== 0) & \\\n                         (random['sin_rostro'] == 1) & (random['numero_domicilio'] == 0)]\n    random_1011 = random[(random['paquete']== 1) & (random['etiqueta_producto']== 0) & \\\n                         (random['sin_rostro'] == 1) & (random['numero_domicilio'] == 1)]\n    random_1100 = random[(random['paquete']== 1) & (random['etiqueta_producto']== 1) & \\\n                         (random['sin_rostro'] == 0) & (random['numero_domicilio'] == 0)]\n    random_1101 = random[(random['paquete']== 1) & (random['etiqueta_producto']== 1) & \\\n                         (random['sin_rostro'] == 0) & (random['numero_domicilio'] == 1)]\n    random_1110 = random[(random['paquete']== 1) & (random['etiqueta_producto']== 1) & \\\n                         (random['sin_rostro'] == 1) & (random['numero_domicilio'] == 0)]\n    random_1111 = random[(random['paquete']== 1) & (random['etiqueta_producto']== 1) & \\\n                         (random['sin_rostro'] == 1) & (random['numero_domicilio'] == 1)]\n    r_list = [random_0001, random_0010, random_0011, random_0100, random_0101,\\\n              random_0110, random_0111, random_1000, random_1001, random_1010, random_1011,\\\n              random_1100, random_1101, random_1110, random_1111]     \n    try:\n        rs_base = random_0000.sample(63, frac=None, replace=False, weights=None, random_state=None)\n    except:\n        rs_base = random_0000\n    for random_x in r_list:\n        try:\n            rs = random_x.sample(63, frac=None, replace=False, weights=None, random_state=None)\n        except:\n            rs = random_x\n        rs_base = pd.concat([rs_base, rs], ignore_index=True)\n    random_sample = rs_base.sample(frac=1).reset_index(drop=True)\n    #random_sample = df_copy.sample(n_r, frac=None, replace=False, weights=None, random_state=None)\n    # destino de tabla aleatoria\n    destination_random_table = dataset + '.' + random_table\n    # anexar tabla aleatoria a tabla generada durante el dia\n    pandas_gbq.to_gbq(random_sample, destination_random_table, project_id=project_id, \n                      if_exists = random_if_exists)\n    print(\"Se almacen\u00f3 exitosamente sub-tabla aleatoria\")\n    # anexar tabla aleatoria, con todas las tablas aleatorias generadas en dias anteriores\n    # para tenerlas de respaldo\n    destination_random_table_backup = dataset + '.' + random_table_backup\n    pandas_gbq.to_gbq(random_sample, destination_random_table_backup, project_id=project_id, \n                      if_exists = random_backup_if_exists)  \n    print(\"Se almacen\u00f3 exitosamente sub-tabla aleatoria al backup\")\n\n    # Metadata\n    FECHA = datetime.datetime.now().strftime(\"%Y-%m-%d\")\n    output_dataset.metadata[\"updated_date\"] = FECHA\n    output_dataset.metadata[\"len_data\"] = len(new_df_base_final)\n\n    # Save Artifact\n    new_df_base_final.to_csv(output_dataset.path + \".csv\", index = False, encoding = 'utf-8-sig')\n\n"
+            ],
+            "image": "python:3.9"
+          }
+        },
+        "exec-set-data-parallel": {
+          "container": {
+            "args": [
+              "--executor_input",
+              "{{$}}",
+              "--function_to_execute",
+              "set_data_parallel"
+            ],
+            "command": [
+              "sh",
+              "-c",
+              "\nif ! [ -x \"$(command -v pip)\" ]; then\n    python3 -m ensurepip || python3 -m ensurepip --user || apt-get install python3-pip\nfi\n\nPIP_DISABLE_PIP_VERSION_CHECK=1 python3 -m pip install --quiet     --no-warn-script-location 'google-cloud-bigquery' 'google-cloud-storage' 'numpy' 'pandas' 'opencv-python-headless' 'db-dtypes' 'kfp==1.8.16' && \"$0\" \"$@\"\n",
+              "sh",
+              "-ec",
+              "program_path=$(mktemp -d)\nprintf \"%s\" \"$0\" > \"$program_path/ephemeral_component.py\"\npython3 -m kfp.v2.components.executor_main                         --component_module_path                         \"$program_path/ephemeral_component.py\"                         \"$@\"\n",
+              "\nimport kfp\nfrom kfp.v2 import dsl\nfrom kfp.v2.dsl import *\nfrom typing import *\n\ndef set_data_parallel(\n    df_images:Input[Dataset],\n    project_id:str\n)-> NamedTuple(\"output\", [(\"deploy\", str)]):\n    import datetime\n    import numpy as np\n    import pandas as pd\n    import cv2\n    import urllib\n    import urllib.request\n    from multiprocessing import cpu_count\n    from multiprocessing.pool import ThreadPool\n\n    from google.cloud import bigquery\n    from google.cloud import storage\n\n    def get_data(url):    \n        try:\n            url_str = url.split('/')[-1]\n            url_open = urllib.request.urlopen(url)\n            image_cv = np.asarray(bytearray(url_open.read()), dtype=\"uint8\")\n            image = cv2.imdecode(image_cv, cv2.IMREAD_COLOR)\n            image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)\n            img_str = cv2.imencode('.png', image)[1].tostring()\n\n            storage_client = storage.Client()\n            bucket = storage_client.bucket('pod_photos')\n            blob = bucket.blob(f'{date.year}{date.month}{date.day}/{url_str}')\n            blob.upload_from_string(img_str)\n        except:\n            # ver el link que tira error\n            pass\n\n    date = datetime.datetime.now()\n    client = bigquery.Client(project = project_id)\n    df_images = pd.read_csv(df_images.path + \".csv\")\n    # los ultimos 30 para ver si la maquina sirve\n    #urls = df_images.loc[:,'url'].iloc[:10]\n    urls = df_images.loc[:,'url']\n\n    cpus = cpu_count()\n    results = ThreadPool(cpus-1).imap_unordered(get_data, urls)\n    # verificar que proceso termine\n    for _ in results:\n        pass\n\n    # Salida\n    msg = \"start\"\n    return(msg,)\n\n"
+            ],
+            "image": "python:3.9",
+            "resources": {
+              "cpuLimit": 32.0,
+              "memoryLimit": 15.0
+            }
+          }
+        },
+        "exec-table-generation": {
+          "container": {
+            "args": [
+              "--executor_input",
+              "{{$}}",
+              "--function_to_execute",
+              "table_generation"
+            ],
+            "command": [
+              "sh",
+              "-c",
+              "\nif ! [ -x \"$(command -v pip)\" ]; then\n    python3 -m ensurepip || python3 -m ensurepip --user || apt-get install python3-pip\nfi\n\nPIP_DISABLE_PIP_VERSION_CHECK=1 python3 -m pip install --quiet     --no-warn-script-location 'pandas' 'kfp==1.8.16' && \"$0\" \"$@\"\n",
+              "sh",
+              "-ec",
+              "program_path=$(mktemp -d)\nprintf \"%s\" \"$0\" > \"$program_path/ephemeral_component.py\"\npython3 -m kfp.v2.components.executor_main                         --component_module_path                         \"$program_path/ephemeral_component.py\"                         \"$@\"\n",
+              "\nimport kfp\nfrom kfp.v2 import dsl\nfrom kfp.v2.dsl import *\nfrom typing import *\n\ndef table_generation(\n    delta_time1: float,\n    df_images:Input[Dataset],\n    df_base:Input[Dataset],\n    dataset:Output[Dataset],  \n):\n    import pandas as pd\n    import datetime\n\n    delta_time = delta_time1\n\n    df_images = pd.read_csv(df_images.path + \".csv\")\n    df_base = pd.read_csv(df_base.path + \".csv\") # prediction\n\n    inner_merged = pd.merge(df_images, df_base, on=[\"url\"])\n    df_base_copy1 = inner_merged.copy()\n    # normalizaci\u00f3n\n    #agregar indice\n    largo_dataset = len(df_base_copy1)\n    df_base_copy1['index'] = df_base_copy1.index\n    # Cambiar tipo de dato de \"score\" a float\n    df_base_copy1[\"score\"] = pd.to_numeric(df_base_copy1[\"score\"])\n    # Seleccionar SOC que tiene mayor \"score\"\n    idx_max_score = df_base_copy1.groupby(['SOC'])['score'].transform(max) == df_base_copy1['score']\n    # Agrupar por RUT, normalizar los nombres y dejar indice\n    #df_base_copy3 = df_base_copy1[['provider_name', 'provider_id']].groupby(['provider_id'], sort = False)['provider_name'].transform('first').to_frame() # primer valor\n    df_base_copy1.provider_name = df_base_copy1.provider_name.str.strip() # quitar espacios al inicio y final\n    df_base_copy1.provider_name = df_base_copy1.provider_name.str.upper() # dejar todo en mayuscula\n    df_base_copy3 = df_base_copy1[['provider_name', 'provider_id']].groupby(['provider_id'], sort = False)['provider_name'].transform(lambda x: pd.Series.mode(x)[0]).to_frame() # valor m\u00e1s frecuente\n    df_base_copy3['index'] = df_base_copy1['index']\n    # \"merge\" del dataset normalizado y el dataset original, con respecto al indice\n    df_base_copy4 = pd.merge(df_base_copy3, df_base_copy1, how='left', on='index')\n    df_base_copy4.provider_name_y = df_base_copy4.provider_name_x\n    df_base_copy4 = df_base_copy4.drop(columns=[\"provider_name_x\"])\n    df_base_copy4.rename(columns = {'provider_name_y':'provider_name'}, inplace = True)\n    # \"merge\" del dataset agrupado por SOC y el dataset anterior, con respecto al indice\n    ##original: df_base_final = df_base_copy1[idx_max_score].drop_duplicates(['SOC'])\n    df_base_final = df_base_copy4[idx_max_score].drop_duplicates(['SOC'])\n    # arreglar fechas\n    ##df_base_final['dfl_crte_tmst'] = df_base_final['dfl_crte_tmst'].dt.tz_localize(None)\n    ##df_base_final['event_crte_tmst'] = df_base_final['event_crte_tmst'].dt.tz_localize(None)\n    #df_base_final['dfl_crte_tmst'] = pd.to_datetime(df_base_final['dfl_crte_tmst'], utc=True).dt.tz_localize(None)\n    #df_base_final['event_crte_tmst'] = pd.to_datetime(df_base_final['event_crte_tmst'], utc=True).dt.tz_localize(None)\n    # guardar largo del dataset\n    new_df_base_final = df_base_final.assign(len_data = largo_dataset)\n    # guardar tiempo de ejecuci\u00f3n\n    new_df_base_final = new_df_base_final.assign(execution_time_model = delta_time)\n\n    # Metadata\n    FECHA = datetime.datetime.now().strftime(\"%Y-%m-%d\")\n    dataset.metadata[\"updated_date\"] = FECHA\n    dataset.metadata[\"len_data\"] = len(new_df_base_final)\n\n    # Save Artifact\n    new_df_base_final.to_csv(dataset.path + \".csv\", index = False, encoding = 'utf-8-sig')\n\n"
+            ],
+            "image": "python:3.9"
+          }
+        }
+      }
+    },
+    "pipelineInfo": {
+      "name": "pipeline-image-recognition-production"
+    },
+    "root": {
+      "dag": {
+        "tasks": {
+          "condition-leer-imagenes-1": {
+            "componentRef": {
+              "name": "comp-condition-leer-imagenes-1"
+            },
+            "dependentTasks": [
+              "load-data",
+              "set-data-parallel"
+            ],
+            "inputs": {
+              "artifacts": {
+                "pipelineparam--load-data-dataset": {
+                  "taskOutputArtifact": {
+                    "outputArtifactKey": "dataset",
+                    "producerTask": "load-data"
+                  }
+                }
+              },
+              "parameters": {
+                "pipelineparam--bucket_name": {
+                  "componentInputParameter": "bucket_name"
+                },
+                "pipelineparam--dataset": {
+                  "componentInputParameter": "dataset"
+                },
+                "pipelineparam--full_table": {
+                  "componentInputParameter": "full_table"
+                },
+                "pipelineparam--n_r": {
+                  "componentInputParameter": "n_r"
+                },
+                "pipelineparam--prediction_if_exists": {
+                  "componentInputParameter": "prediction_if_exists"
+                },
+                "pipelineparam--project_id": {
+                  "componentInputParameter": "project_id"
+                },
+                "pipelineparam--random_backup_if_exists": {
+                  "componentInputParameter": "random_backup_if_exists"
+                },
+                "pipelineparam--random_if_exists": {
+                  "componentInputParameter": "random_if_exists"
+                },
+                "pipelineparam--random_table": {
+                  "componentInputParameter": "random_table"
+                },
+                "pipelineparam--random_table_backup": {
+                  "componentInputParameter": "random_table_backup"
+                },
+                "pipelineparam--set-data-parallel-deploy": {
+                  "taskOutputParameter": {
+                    "outputParameterKey": "deploy",
+                    "producerTask": "set-data-parallel"
+                  }
+                }
+              }
+            },
+            "taskInfo": {
+              "name": "condition-leer-imagenes-1"
+            },
+            "triggerPolicy": {
+              "condition": "inputs.parameters['pipelineparam--set-data-parallel-deploy'].string_value == 'start'"
+            }
+          },
+          "copy-tables": {
+            "cachingOptions": {
+              "enableCache": true
+            },
+            "componentRef": {
+              "name": "comp-copy-tables"
+            },
+            "inputs": {
+              "parameters": {
+                "project_id": {
+                  "componentInputParameter": "project_id"
+                }
+              }
+            },
+            "taskInfo": {
+              "name": "copy-tables"
+            }
+          },
+          "load-data": {
+            "cachingOptions": {
+              "enableCache": true
+            },
+            "componentRef": {
+              "name": "comp-load-data"
+            },
+            "inputs": {
+              "parameters": {
+                "project_id": {
+                  "componentInputParameter": "project_id"
+                },
+                "query": {
+                  "componentInputParameter": "query"
+                }
+              }
+            },
+            "taskInfo": {
+              "name": "load-data"
+            }
+          },
+          "set-data-parallel": {
+            "cachingOptions": {
+              "enableCache": true
+            },
+            "componentRef": {
+              "name": "comp-set-data-parallel"
+            },
+            "dependentTasks": [
+              "load-data"
+            ],
+            "inputs": {
+              "artifacts": {
+                "df_images": {
+                  "taskOutputArtifact": {
+                    "outputArtifactKey": "dataset",
+                    "producerTask": "load-data"
+                  }
+                }
+              },
+              "parameters": {
+                "project_id": {
+                  "componentInputParameter": "project_id"
+                }
+              }
+            },
+            "taskInfo": {
+              "name": "set-data-parallel"
+            }
+          }
+        }
+      },
+      "inputDefinitions": {
+        "parameters": {
+          "bucket_name": {
+            "type": "STRING"
+          },
+          "dataset": {
+            "type": "STRING"
+          },
+          "full_table": {
+            "type": "STRING"
+          },
+          "n_r": {
+            "type": "INT"
+          },
+          "prediction_if_exists": {
+            "type": "STRING"
+          },
+          "project_id": {
+            "type": "STRING"
+          },
+          "query": {
+            "type": "STRING"
+          },
+          "random_backup_if_exists": {
+            "type": "STRING"
+          },
+          "random_if_exists": {
+            "type": "STRING"
+          },
+          "random_table": {
+            "type": "STRING"
+          },
+          "random_table_backup": {
+            "type": "STRING"
+          }
+        }
+      }
+    },
+    "schemaVersion": "2.0.0",
+    "sdkVersion": "kfp-1.8.16"
+  },
+  "runtimeConfig": {
+    "gcsOutputDirectory": "gs://image-recognition-pipeline-production/PIPELINES/image-recognition/",
+    "parameters": {
+      "bucket_name": {
+        "stringValue": "pod_photos"
+      },
+      "dataset": {
+        "stringValue": "pod_image_recognition"
+      },
+      "full_table": {
+        "stringValue": "prediction_table"
+      },
+      "n_r": {
+        "intValue": "1000"
+      },
+      "prediction_if_exists": {
+        "stringValue": "append"
+      },
+      "project_id": {
+        "stringValue": "tc-sc-bi-analytics-corp-supply"
+      },
+      "query": {
+        "stringValue": "\nSELECT DISTINCT transport_ord_id as SOC, i.url as url, shipment.plate_num as plate_num, \nprovider.doc_id as provider_id, \nprovider.doc_verify_digit as provider_verify_digit,\nprovider.name as provider_name, driver.doc_id as driver_id, \ndriver.doc_verify_digit as driver_verify_digit,\ndriver.name as driver_name, driver.last_name as driver_last_name,\nDATETIME(event_crte_tmst, 'America/Santiago') as event_crte_tmst, dfl_crte_tmst\nFROM \n`tc-sc-bi-analytics-corp-supply.pod_image_recognition.btd_scha_fal_trmg_api_transport_order_temp`,\nunnest(image) as i\n \nWHERE\n  i.url is not null\n  and provider.name is not null\n  and provider.doc_id is not null\n  and DATE(event_crte_tmst, 'America/Santiago') = current_date() - 1\n"
+      },
+      "random_backup_if_exists": {
+        "stringValue": "append"
+      },
+      "random_if_exists": {
+        "stringValue": "replace"
+      },
+      "random_table": {
+        "stringValue": "validation_table"
+      },
+      "random_table_backup": {
+        "stringValue": "validation_table_backup"
+      }
+    }
+  }
+}
