@@ -72,10 +72,10 @@ import cv2
 class PredictionDataset(Dataset):
     """Photos prediction dataset."""
 
-    def __init__(self, bucket_name, blob_name_list, normalization = 'mlc', device = 'cuda'):
+    def __init__(self, path_bucket, blob_name_list, normalization = 'mlc', device = 'cuda'):
         """
         Args:
-            bucket_name (str): Nombre del bucket
+            bucket:
             blob_name_list (list): Lista de nombres de blobs guardados en bucket respectivo
             normalization (string): Indica si se debe implementar la transformación
             de normalización para el clasificador multi-etiqueta ('mlc') o para el 
@@ -87,7 +87,7 @@ class PredictionDataset(Dataset):
         """
         
         client = storage.Client()
-        bucket = client.get_bucket(bucket_name)
+        bucket = client.get_bucket(path_bucket)
         self.bucket = bucket
         self.blob_name_list = blob_name_list
         self.normalization = normalization
@@ -105,19 +105,21 @@ class PredictionDataset(Dataset):
 
     def __getitem__(self, idx):
         
-        blob_name = self.blob_name_list[idx]
-        imagename = blob_name.split('/')[1]
-        blob = self.bucket.get_blob(blob_name)
+        blob_name = blob_name_list[idx]
+        blob = bucket.get_blob(blob_name)
         try:
             b = blob.download_as_bytes()
             image_cv = np.asarray(bytearray(b), dtype="uint8")
             foto = cv2.imdecode(image_cv, cv2.IMREAD_COLOR)
-            area = foto.shape[0]*foto.shape[1]
+            area = image.shape[0]*image.shape[1]
             url = 'https://prdadessacorptrl.blob.core.windows.net/cl-images/' + imagename
         except:
             foto = np.zeros((480,480,3), np.uint8)
-            area = foto.shape[0]*foto.shape[1]
+            area = image.shape[0]*image.shape[1]
             url = 'https://prdadessacorptrl.blob.core.windows.net/cl-images/' + imagename
+        foto = self.lista_fotos[idx][0]
+        area = self.lista_fotos[idx][1]
+        url = self.lista_fotos[idx][2]
         # aplicar normalizacion
         if self.normalization == 'mlc':
             pro_img  = self.mlc_normalization(foto)
